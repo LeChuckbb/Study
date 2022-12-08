@@ -1,4 +1,6 @@
 {
+  // Decoupling Ver
+
   type CoffeeCup = {
     shots: number;
     hasMilk?: boolean;
@@ -64,9 +66,6 @@
   interface MilkFrother {
     makeMilk(cup: CoffeeCup): CoffeeCup;
   }
-  interface SugarProvider {
-    addSugar(cup: CoffeeCup): CoffeeCup;
-  }
 
   // 싸구려 우유 거품기
   class CheapMilkSteamear implements MilkFrother {
@@ -114,6 +113,9 @@
     }
   }
 
+  interface SugarProvider {
+    addSugar(cup: CoffeeCup): CoffeeCup;
+  }
   // 설탕 제조기
   class CandySugarMixer implements SugarProvider {
     private getSugar() {

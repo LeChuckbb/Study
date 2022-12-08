@@ -116,7 +116,7 @@
   }
 
   // SweetCafeLatteMachine은 CheapMilkSteamer, AutomaticSugarMixer와 밀접하게 관련되어서 서로 영향을 끼친다는 게 문제.
-  class SweetCafeLatteMachine extends CoffeeMachine {
+  class SweetCaffeLatteMachine extends CoffeeMachine {
     constructor(
       private beans: number,
       private milk: CheapMilkSteamer,
