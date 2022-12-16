@@ -1,3 +1,4 @@
+import HookForm from "./ react-hook-form/HookForm";
 import CarouselApp from "./carousel/CarouselApp";
 import ModalApp from "./modal/ModalApp";
 import PaginationApp from "./pagination/PaginationApp";
@@ -9,7 +10,8 @@ function App() {
   // return <CarouselApp />;
   // return <PaginationApp />;
   // return <ModalApp />;
-  return <TodoApp />;
+  // return <TodoApp />;
+  return <HookForm />;
 }
 
 export default App;

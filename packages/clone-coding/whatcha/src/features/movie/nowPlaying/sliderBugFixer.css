@@ -1,0 +1,17 @@
+.slick-slider {
+  position: relative;
+}
+.slick-list {
+  overflow: hidden;
+}
+
+.slick-track {
+  display: flex;
+}
+.slick-arrow {
+  position: absolute;
+  cursor: pointer;
+}
+.slick-arrow.slick-prev {
+  right: 100% !important;
+}

@@ -22,7 +22,6 @@ const Container = styled.section`
   display: flex;
   flex-direction: column;
 `;
-
 const TabsWrapper = styled.div`
   margin: 24px auto 0;
 `;
