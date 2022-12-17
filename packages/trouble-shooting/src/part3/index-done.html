@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="React troubleshooting session - Workshop 2"
+    />
+    <title>Workshop 2</title>
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+  </body>
+  <script type="text/javascript">
+    const OurReactDOM = (function() {
+      let _container;
+      let _elementOrComponent;
+      
+      function _render() {
+        const elementTree = OurReact.render();
+        
+        const run = (reactElement, parent) => {
+          parent = parent || document.createElement('div');
+          Object.entries(reactElement).forEach(([key, value]) => {
+            // JSX 태그 이름이면
+            if (key.includes('div') || key.includes('button') || key.includes('input')) {
+              const _el = document.createElement(key.replace(/[0-9].?/, ''));
+              parent.appendChild(_el);
+              if (typeof value === 'object') {
+                run(value, _el);
+              }
+            // JSX 태그 안에 들어간 텍스트면 ......
+            } else if (key === 'text') {
+              parent.innerHTML = parent.innerHTML += value;
+            // JSX 태그의 value 속성이면 ...
+            } else if (key === 'value') {
+              parent.value = value;
+            // 태그 속성 중 onClick 이면 ...
+            } else if (key === 'onClick') {
+              parent.addEventListener('click', value);
+            // 태그 속성 중 onChange 면 ...
+            } else if (key === 'onChange') {
+              parent.addEventListener('change', value);
+            // 다른 속성 구현은 건너 뛰고, 함수형 컴포넌트라면..
+            } else {
+              if (typeof value === 'function') {
+                run(value(), parent);
+              }
+            }
+          });
+          return parent;
+        }
+
+        _container.innerHTML = '';
+        _container.appendChild(run(elementTree, null));
+      };
+      
+      return {
+        render(elementOrComponent, container) {
+          if (!container instanceof Element) throw new Error('OurReactDOM should be rendered on DOM Element');
+
+          _container = container;
+          _elementOrComponent = elementOrComponent;
+          OurReact._setRenderer(OurReactDOM);
+          OurReact._setElementOrComponent(elementOrComponent);
+          
+          _render();
+        },
+        _render,
+      }
+    })();
+
+    const OurReact = (function() {
+      let _currentIndex = 0;
+      let _hooks = [];
+      let _val = null; // 모듈 스코프 내에 값을 바인딩 (useState 의 리턴에서는 _val 의 값이 아닌 참조를 가짐)
+      let _renderer = null;
+      let _elementOrComponent = null;
+
+      return {
+        _setRenderer(renderer) {
+          _renderer = renderer;
+        },
+        _setElementOrComponent(elementOrComponent) {
+          _elementOrComponent = elementOrComponent;
+        },
+        render() {
+          let result = null;;
+          // 컴포넌트 인스턴스 또는 함수형 컴포넌트 실행 ...
+          if (typeof _elementOrComponent !== 'function') return _elementOrComponent;
+          const component = _elementOrComponent();
+  
+          if (component.render !== undefined) {
+            result = component.render();
+          } else {
+            result = component;
+          }
+          _currentIndex = 0;
+
+          return result;
+        },
+        useState(initialValue) {
+          const currentIndex = _currentIndex;
+          _hooks[_currentIndex] = _hooks[_currentIndex] || initialValue // 초기값 없을 경우 할당
+
+          const setState = (cbOrValue) => {
+            if (typeof cbOrValue === 'function') {
+              _hooks[currentIndex] = cbOrValue(_hooks[currentIndex]);
+            } else {
+              _hooks[currentIndex] = cbOrValue;
+            }
+            _renderer._render();
+          };
+          _currentIndex++;
+
+          return [_hooks[currentIndex], setState];
+        },
+        useEffect(cb, deps) {
+          const prevDeps = _hooks[_currentIndex];
+          const isChanged = prevDeps ? !deps.every((el, i) => el === prevDeps[i]) : true;
+          // 초기 실행 or 의존하는 값이 달라진 경우 콜백 실행
+          if (!prevDeps || isChanged) {
+            cb()
+            _hooks[_currentIndex] = deps;
+          }
+          _currentIndex++;
+        },
+      }
+    })();
+
+    const Greeting = () => ({
+      div: {
+        text: 'Hello World!!!!!!!!!!',
+      },
+    });
+
+    const App = () => {
+      const [renderCount, setRenderCount] = OurReact.useState(1);
+      const [counter, setCounter] = OurReact.useState(0);
+      const [inputText, setInputText] = OurReact.useState('');
+
+      OurReact.useEffect(() => {
+        console.log('something changed!!?!?', renderCount, counter, inputText);
+      }, [renderCount, counter, inputText]);
+
+      // <div>
+      //   ${renderCount}
+      //   <button onclick={() => setRenderCount((val) => val + 1)}>+1!</button>
+      //   <div>counter from 0:{counter}</div>
+      //   <button onclick={() => setCounter((val) => val + 1)}>Counter + 1!</button>
+      //   <div>text input: {inputText}</div>
+      //   <input value={inputText} onChange={(e) => setInputText(e.target.value} />
+      //   <Greeting />
+      // </div>
+      const reactElement = {
+        div: {
+          text: renderCount,
+          button: {
+            onClick: () => setRenderCount((val) => val + 1),
+            text: '+1!',
+          },
+          div: {
+            text: 'counter from 0:' + counter,
+          },
+          button2: {
+            onClick: () => setCounter(counter + 1),
+            text: 'Counter + 1!',
+          },
+          div2: {
+            text: 'text input' + inputText,
+          },
+          input: {
+            onChange: (e) => setInputText(e.target.value),
+            value: inputText,
+          },
+          Greeting,
+        }
+      };
+
+      return reactElement;
+    };
+
+    OurReactDOM.render(App, document.getElementById('root'));
+  </script>
+</html>

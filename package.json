@@ -8,5 +8,8 @@
     "packages/*",
     "packages/clone-coding/*"
   ],
+  "nohoist": [
+    "packages/clone-coding/*"
+  ],
   "scripts": {}
 }

@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="React troubleshooting session - Workshop 2"
+    />
+    <title>Workshop 2</title>
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+  </body>
+  <script type="text/javascript">
+    const OurReactDOM = (function() {
+      let _container;
+      let _elementOrComponent;
+      
+      function _render() {
+        const elementTree = OurReact.render();
+        
+        const run = (reactElement, parent) => {
+          parent = parent || document.createElement('div');
+          Object.entries(reactElement).forEach(([key, value]) => {
+            // JSX 태그 이름이면
+            if (key.includes('div') || key.includes('button')) {
+              const _el = document.createElement(key.replace(/[0-9].?/, ''));
+              parent.appendChild(_el);
+              if (typeof value === 'object') {
+                run(value, _el);
+              }
+            // JSX 태그 안에 들어간 텍스트면 ......
+            } else if (key === 'text') {
+              parent.innerHTML = parent.innerHTML += value;
+            // 태그 속성 중 onClick 이면 ...
+            } else if (key === 'onClick') {
+              parent.addEventListener('click', value);
+            // 다른 속성 구현은 건너 뛰고, 함수형 컴포넌트라면..
+            } else {
+              if (typeof value === 'function') {
+                run(value(), parent);
+              }
+            }
+          });
+          return parent;
+        }
+
+        _container.innerHTML = '';
+        _container.appendChild(run(elementTree, null));
+      };
+      
+      return {
+        render(elementOrComponent, container) {
+          if (!container instanceof Element) throw new Error('OurReactDOM should be rendered on DOM Element');
+
+          _container = container;
+          _elementOrComponent = elementOrComponent;
+          OurReact._setRenderer(OurReactDOM);
+          OurReact._setElementOrComponent(elementOrComponent);
+          
+          _render();
+        },
+        _render,
+      }
+    })();
+
+    const OurReact = (function() {
+      let _val = null; // 모듈 스코프 내에 값을 바인딩 (useState 의 리턴에서는 _val 의 값이 아닌 참조를 가짐)
+      let _renderer = null;
+      let _elementOrComponent = null;
+
+      return {
+        _setRenderer(renderer) {
+          _renderer = renderer;
+        },
+        _setElementOrComponent(elementOrComponent) {
+          _elementOrComponent = elementOrComponent;
+        },
+        render() {
+          let result = null;;
+          // 컴포넌트 인스턴스 또는 함수형 컴포넌트 실행 ...
+          if (typeof _elementOrComponent !== 'function') return _elementOrComponent;
+          const component = _elementOrComponent();
+  
+          if (component.render !== undefined) {
+            result = component.render();
+          } else {
+            result = component;
+          }
+          return result;
+        },
+        useState(initialValue) {
+          _val = _val || initialValue // 초기값 없을 경우 할당
+          const setState = (cbOrValue) => {
+            if (typeof cbOrValue === 'function') {
+              _val = cbOrValue(_val);
+            } else {
+              _val = cbOrValue;
+            }
+  
+            _renderer._render();
+          }
+          return [_val, setState];
+        },
+      }
+    })();
+
+    const Greeting = () => ({
+      div: {
+        text: 'Hello World!!!!!!!!!!',
+      },
+    });
+
+    const App = () => {
+      const [renderCount, setRenderCount] = OurReact.useState(1);
+
+      // <div>
+      //   ${renderCount}
+      //   <button onclick="${() => setRenderCount((val) => val + 1)}">+1!</button>
+      //   <Greeting />
+      // </div>
+      const reactElement = {
+        div: {
+          text: renderCount,
+          button: {
+            onClick: () => setRenderCount((val) => val + 1),
+            text: '+1!',
+          },
+          button2: {
+            onClick: () => setRenderCount(renderCount + 1),
+            text: '+1!',
+          },
+          Greeting,
+        }
+      };
+
+      return reactElement;
+    };
+
+    OurReactDOM.render(App, document.getElementById('root'));
+  </script>
+</html>
